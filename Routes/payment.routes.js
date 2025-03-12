@@ -1,4 +1,5 @@
 const { protect, restrictTo } = require("../Controllers/authController");
+const express = require("express");
 const {
   getCheckOutSession,
   webhookCheckout,
@@ -14,7 +15,7 @@ const {
 
 const paymentRouter = require("express").Router();
 
-paymentRouter.route("/checkout").post(webhookCheckout);
+paymentRouter.post("/checkout", express.raw({ type: "application/json" }), webhookCheckout);
 paymentRouter.use(protect);
 paymentRouter
   .route("/purchase/:course_id")

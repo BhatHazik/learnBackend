@@ -341,7 +341,7 @@ exports.updateCourse = asyncChoke(async (req, res, next) => {
       description,
       price,
       category_id,
-      status,
+      // status,
       discount,
       access,
     },

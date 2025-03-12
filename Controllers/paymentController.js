@@ -158,7 +158,7 @@ const createBookingCheckout = async (session) => {
 
 exports.webhookCheckout = (req, res, next) => {
   const signature = req.headers["stripe-signature"];
-
+  console.log("i am here");
   let event;
   try {
     event = stripe.webhooks.constructEvent(
@@ -522,7 +522,7 @@ exports.createPayout = asyncChoke(async (req, res, next) => {
 exports.webhookPayout = asyncChoke(async (req, res) => {
   const sig = req.headers["stripe-signature"];
   const endpointSecret = process.env.WEBHOOK_PAYOUT;
-
+  console.log("i am here");
   let event;
 
   try {
@@ -535,6 +535,7 @@ exports.webhookPayout = asyncChoke(async (req, res) => {
   switch (event.type) {
     case "payout.created":
       const payoutcreated = event.data.object;
+      console.log(payoutcreated);
       createPayoutEntry(payoutcreated);
 
     case "payout.paid":

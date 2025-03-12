@@ -322,10 +322,10 @@ exports.getOrderHistory = asyncChoke(async (req, res, next) => {
 });
 
 exports.getCoinsPrchaseHistory = asyncChoke(async (req, res, next) => {
-  const query = ` select  points,payment_date,amount ,payment_status
+  const query = ` select points,payment_date,amount ,payment_status
   from user_points where user_points.user_id=?`;
   const [coins] = await pool.query(query, [req.user.id]);
-
+  console.log(coins);
   if (coins.length === 0) return next(new AppError(404, "No coins purchased"));
 
   res.status(200).json({
@@ -426,6 +426,8 @@ exports.purchasePoints = asyncChoke(async (req, res, next) => {
   const { id } = req.user;
   const amount = process.env.POINT * points;
 
+  console.log(amount, points, id);
+
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
     line_items: [
@@ -449,6 +451,8 @@ exports.purchasePoints = asyncChoke(async (req, res, next) => {
       sessionType: "purchase_points",
     },
   });
+
+  // console.log(session);
 
   res.status(200).json({
     status: "Success",
