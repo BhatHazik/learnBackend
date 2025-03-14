@@ -222,3 +222,45 @@ exports.getCategoryById = asyncChoke(async (req, res, next) => {
     data: results,
   });
 });
+
+exports.getCategoriesWithSubcategories = asyncChoke(async (req, res, next) => {
+  const search = req.query.search || ""; // Get search query from request
+
+  // First, get all main categories (where parent_id is NULL)
+  const mainCategoriesQuery = `
+    SELECT id AS category_id, name AS category_name 
+    FROM categories 
+    WHERE parent_id IS NULL AND name LIKE ?
+    ORDER BY name ASC
+  `;
+  
+  const [mainCategories] = await pool.query(mainCategoriesQuery, [`%${search}%`]);
+  
+  if (mainCategories.length === 0) {
+    return next(new AppError(404, "No categories found"));
+  }
+  
+  // For each main category, get its subcategories
+  const categoriesWithSubs = await Promise.all(
+    mainCategories.map(async (category) => {
+      const subcategoriesQuery = `
+        SELECT id AS subcategory_id, name AS subcategory_name
+        FROM categories
+        WHERE parent_id = ?
+        ORDER BY name ASC
+      `;
+      
+      const [subcategories] = await pool.query(subcategoriesQuery, [category.category_id]);
+      
+      return {
+        ...category,
+        subcategories: subcategories || []
+      };
+    })
+  );
+  
+  res.status(200).json({
+    message: "Success",
+    data: categoriesWithSubs
+  });
+});

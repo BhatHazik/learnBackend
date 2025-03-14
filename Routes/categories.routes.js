@@ -9,11 +9,13 @@ const {
   deleteSubcategory,
   updateSubcategory,
   createSubcategory,
+  getCategoriesWithSubcategories,
 } = require("../Controllers/categoryController");
 
 const categoriesRouter = require("express").Router();
 
 categoriesRouter.route("/").get(getAllCategories);
+categoriesRouter.route("/with-subcategories").get(getCategoriesWithSubcategories);
 categoriesRouter.route("/:categoryId/subcategories").get(getSubcategoriesByCategoryId);
 
 categoriesRouter.use(protect, restrictTo(["admin"]));

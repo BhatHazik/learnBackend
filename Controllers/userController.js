@@ -461,8 +461,8 @@ exports.purchasePoints = asyncChoke(async (req, res, next) => {
 });
 
 exports.createPointsCheckout = async (session) => {
-  const paymentDate = new Date(session.created * 1000).toLocaleString();
-  console.log(session);
+  const paymentDate = new Date(session.created * 1000);
+  console.log(paymentDate);
 
   await create("user_points", {
     user_id: session.metadata.user_id,
