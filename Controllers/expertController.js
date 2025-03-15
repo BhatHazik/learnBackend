@@ -45,25 +45,101 @@ exports.getFighterHistory = asyncChoke(async (req, res, next) => {
   const { id } = req.query;
   const query = `select * from fighter_history where expert_id=?`;
   const [result] = await pool.query(query, [id]);
+  
+  // Calculate statistics
+  const stats = {
+    total: result.length,
+    win: {
+      count: 0,
+      ko_percentage: 0,
+      submission_percentage: 0,
+      decision_percentage: 0
+    },
+    lose: {
+      count: 0,
+      ko_percentage: 0,
+      submission_percentage: 0,
+      decision_percentage: 0
+    }
+  };
+  
+  // Count wins, losses and calculate percentages
+  let winKoCount = 0;
+  let winSubmissionCount = 0;
+  let winDecisionCount = 0;
+  let loseKoCount = 0;
+  let loseSubmissionCount = 0;
+  let loseDecisionCount = 0;
+  
+  result.forEach(fight => {
+    if (fight.result.toLowerCase() === 'win') {
+      stats.win.count++;
+      if (fight.ko === 1) winKoCount++;
+      if (fight.submission === 1) winSubmissionCount++;
+      if (fight.ko === 0 && fight.submission === 0) winDecisionCount++;
+    } else if (fight.result.toLowerCase() === 'lose') {
+      stats.lose.count++;
+      if (fight.ko === 1) loseKoCount++;
+      if (fight.submission === 1) loseSubmissionCount++;
+      if (fight.ko === 0 && fight.submission === 0) loseDecisionCount++;
+    }
+  });
+  
+  // Calculate percentages for wins
+  if (stats.win.count > 0) {
+    stats.win.ko_percentage = (winKoCount / stats.win.count) * 100;
+    stats.win.submission_percentage = (winSubmissionCount / stats.win.count) * 100;
+    stats.win.decision_percentage = (winDecisionCount / stats.win.count) * 100;
+  }
+  
+  // Calculate percentages for losses
+  if (stats.lose.count > 0) {
+    stats.lose.ko_percentage = (loseKoCount / stats.lose.count) * 100;
+    stats.lose.submission_percentage = (loseSubmissionCount / stats.lose.count) * 100;
+    stats.lose.decision_percentage = (loseDecisionCount / stats.lose.count) * 100;
+  }
+  
   res.status(200).json({
     status: "success",
     data: result,
+    statistics: stats
   });
 });
 
 
 
 exports.addPastCompetition = asyncChoke(async (req, res, next) => {
-  const { competition_name, competition_date, acheavements, location } = req.body;
-  if (!competition_name ||!competition_date ||!acheavements ||!location) {
+  const { competition_name, competition_date, acheavements, location, match_link } = req.body;
+  if (!competition_name ||!competition_date ||!acheavements ||!location ||!match_link) {
     return next(new AppError(401, "provide all inputs"));
   }
-  await create("past_competitions", { competition_name, competition_date, acheavements, location, expert_id: req.user.id });
+  await create("past_competitions", { competition_name, competition_date, acheavements, location, match_link, expert_id: req.user.id });
   res.status(200).json({
     status: "success",
     message: "Past competition added successfully",
   });
 });
+
+exports.updatePastCompetition = asyncChoke(async (req, res, next) => {
+  const { id } = req.params;
+  const { competition_name, competition_date, acheavements, location, match_link } = req.body;
+  await findAndUpdate("past_competitions", { competition_name, competition_date, acheavements, location, match_link }, { id });
+  res.status(200).json({
+    status: "success",
+    message: "Past competition updated successfully",
+  });
+});
+
+exports.deletePastCompetition = asyncChoke(async (req, res, next) => {
+  const { id } = req.params;
+  await findAndDelete("past_competitions", { id });
+  res.status(200).json({
+    status: "success",
+    message: "Past competition deleted successfully",
+  });
+});
+
+
 
 exports.getPastCompetitions = asyncChoke(async (req, res, next) => {
   const { id } = req.query;
@@ -79,16 +155,37 @@ exports.getPastCompetitions = asyncChoke(async (req, res, next) => {
 });
 
 exports.addUpcomingCompetition = asyncChoke(async (req, res, next) => {
-  const { competition_name, competition_date, location } = req.body;
-  if (!competition_name ||!competition_date ||!location) {
+  const { competition_name, competition_date, location, match_link } = req.body;
+  if (!competition_name ||!competition_date ||!location ||!match_link) {
     return next(new AppError(401, "provide all inputs"));
   }
-  await create("upcoming_competitions", { competition_name, competition_date, location, expert_id: req.user.id });
+  await create("upcoming_competitions", { competition_name, competition_date, location, match_link, expert_id: req.user.id });
   res.status(200).json({
     status: "success",
     message: "Upcoming competition added successfully",
   });
+  });
+
+exports.updateUpcomingCompetition = asyncChoke(async (req, res, next) => {
+  const { id } = req.params;
+  const { competition_name, competition_date, location, match_link } = req.body;
+  await findAndUpdate("upcoming_competitions", { competition_name, competition_date, location, match_link }, { id });
+  res.status(200).json({
+    status: "success",
+    message: "Upcoming competition updated successfully",
+  });
 });
+
+exports.deleteUpcomingCompetition = asyncChoke(async (req, res, next) => {
+  const { id } = req.params;
+  await findAndDelete("upcoming_competitions", { id });
+  res.status(200).json({
+    status: "success",
+    message: "Upcoming competition deleted successfully",
+  });
+}); 
+
+
 
 exports.getUpcomingCompetitions = asyncChoke(async (req, res, next) => {
   const { id } = req.query;

@@ -133,7 +133,7 @@ module.exports = class Email {
         from: this.from,
         to: this.to,
         html: `
-    <!DOCTYPE html>
+   <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -161,23 +161,45 @@ module.exports = class Email {
         margin-bottom: 20px;
         line-height: 1.6;
         color: #555;
+        padding: 0 15px;
     }
     .button {
-      display: block;
-      width: 50%;
-      padding: 15px 20px;
-      background: linear-gradient(to right, #0C243C 0%, #7E8C9C 100%);
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-      text-align: center;
-      text-decoration: none;
+        display: inline-block;
+        padding: 15px 20px;
+        background: linear-gradient(to right, #0C243C 0%, #7E8C9C 100%);
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+        text-align: center;
+        text-decoration: none;
+        font-size: 16px;
+        font-weight: bold;
+        margin: 10px auto;
     }
     .email-footer {
         font-size: 12px;
         color: #777;
+        padding: 10px;
+    }
+    .email-footer a {
+        color: #0C243C;
+        text-decoration: none;
+        font-weight: bold;
+    }
+    
+    /* Responsive Design */
+    @media screen and (max-width: 600px) {
+        .email-container {
+            width: 90%;
+            padding: 15px;
+        }
+        .button {
+            width: 100%;
+            font-size: 14px;
+            padding: 12px;
+        }
     }
 </style>
 </head>
@@ -187,14 +209,15 @@ module.exports = class Email {
         <h1>Welcome ${this.name} 👋</h1>
     </div>
     <div class="email-body">
-        <p>Welcome to JiuJitsux!</p>
+        <p>Welcome to My JiuJitsux!</p>
         <p>We're excited to have you on board. To get started and fully access our e-learning platform, we need to verify your email address. Please click the link below to confirm your email:</p>
-         <a href="${this.uri}" class="button">  <p style="margin: 0; padding: 0; color: #fff;">Click here to verify!</p></a>
+        <a href="${this.uri}" class="button">Click here to verify!</a>
         <p>Once your email is verified, you'll have access to a wealth of JiuJitsux training resources, tutorials, and community support.</p>
     </div>
     <div class="email-footer">
         <p>Best regards,<br>The JiuJitsux Team</p>
-        <p><a href="http://www.myjiujitsu.com">www.myjiujitsu.com</a><br><a href="mailto:help@jiuJitsux.com">help@jiuJitsux.com</a></p>
+        <p><a href="http://www.myjiujitsu.com">www.myjiujitsu.com</a><br>
+           <a href="mailto:help@jiuJitsux.com">help@jiuJitsux.com</a></p>
     </div>
 </div>
 </body>

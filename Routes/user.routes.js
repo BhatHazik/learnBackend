@@ -20,6 +20,7 @@ const {
   purchasePoints,
   getCoinsPrchaseHistory,
   getCoinsCost,
+  bookSeminar,
 } = require("../Controllers/userController");
 // const { uploadUserPhotos } = require("../Utils/uploadProfile");
 
@@ -47,5 +48,5 @@ UserRouter.route("/purchasePoints")
   .get(getCoinsPrchaseHistory);
 UserRouter.route("/coinCost/:points").get(getCoinsCost);
 UserRouter.route("/userWallet").get(userWallet);
-
+UserRouter.route("/bookSeminar").post(bookSeminar);
 module.exports = UserRouter;

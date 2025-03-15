@@ -510,3 +510,18 @@ exports.createPointsCheckout = async (session) => {
     payment_date: new Date(paymentDate),
   });
 };
+
+
+exports.bookSeminar = asyncChoke(async (req, res, next) => {
+  const { id } = req.user;
+  const {full_name, email, phone_number, inquery_about, date, location, topics, expert_id} = req.body;
+  const query = `INSERT INTO seminar_booking (full_name, email, phone_number, inquiry_about, date, location, topics, expert_id, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+  await pool.query(query, [full_name, email, phone_number, inquery_about, date, location, topics, expert_id, id]);
+  res.status(200).json({
+    status: "success",
+    message: "Seminar booked successfully",
+  });
+});
+
+
+

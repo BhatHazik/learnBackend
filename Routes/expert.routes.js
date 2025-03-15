@@ -13,6 +13,11 @@ const {
   getUpcomingCompetitions,
   addFigherHistory,
   updateFighterHistory,
+  deleteFighterHistory,
+  updatePastCompetition,
+  deletePastCompetition,
+  updateUpcomingCompetition,
+  deleteUpcomingCompetition,
 } = require("../Controllers/expertController");
 
 const expertRouter = require("express").Router();
@@ -27,7 +32,12 @@ expertRouter.route("/reviewRequest").post(createReviewRequest);
 expertRouter.route("/getRemarks/:course_id").get(getRemarks);
 expertRouter.route("/addFighterHistory").post(addFigherHistory);
 expertRouter.route("/updateFighterHistory/:id").patch(updateFighterHistory);
+expertRouter.route("/deleteFighterHistory/:id").delete(deleteFighterHistory);
 expertRouter.route("/addPastMatch").post(addPastCompetition);
+expertRouter.route("/updatePastMatch/:id").patch(updatePastCompetition);
+expertRouter.route("/deletePastMatch/:id").delete(deletePastCompetition);
 expertRouter.route("/addUpcomingMatch").post(addUpcomingCompetition);
+expertRouter.route("/updateUpcomingMatch/:id").patch(updateUpcomingCompetition);
+expertRouter.route("/deleteUpcomingMatch/:id").delete(deleteUpcomingCompetition);
 
 module.exports = expertRouter;

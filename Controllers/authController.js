@@ -92,7 +92,7 @@ exports.getVerificationToken = asyncChoke(async (req, res, next) => {
       expiresIn: "59m",
     }
   );
-  const uri = `https://elearn-pv2m.onrender.com/api/v1/auth/email/updateEmail/${token}`;
+  const uri = `${process.env.BACKEND_DOMAIN}/api/v1/auth/email/updateEmail/${token}`;
   new Email(email, uri, user.name).sendWelcome();
 
   res.status(200).json({
@@ -118,6 +118,12 @@ exports.addUser = asyncChoke(async (req, res, next) => {
 
   if (password !== confirmPassword) {
     return next(new AppError(400, "passwords does not match"));
+  }
+
+  const [existingUser] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+  console.log(existingUser, email);
+  if (existingUser.length > 0) {
+    return next(new AppError(400, "User already exists"));
   }
 
   const hashedpassword = await hashPassword(password);
