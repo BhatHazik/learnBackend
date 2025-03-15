@@ -79,6 +79,14 @@ exports.getprofile = asyncChoke(async (req, res, next) => {
   profiles.bio,
   profiles.company_name, 
   profiles.website,
+  profiles.age,
+  profiles.height,
+  profiles.wins,
+  profiles.losses,
+  profiles.fighter_class,
+  profiles.kto_percentage,
+  profiles.submission_percentage,
+  profiles.country,
   SUBSTRING_INDEX(profiles.social_media_links, ',', 1) AS youtube,
   SUBSTRING_INDEX(SUBSTRING_INDEX(profiles.social_media_links, ',', -1), ',', 1) AS twitter
 FROM users 
@@ -112,13 +120,26 @@ exports.deleteUser = asyncChoke(async (req, res, next) => {
 
 exports.updateProfile = asyncChoke(async (req, res, next) => {
   const { id } = req.user;
-  const { name, company_name, youtube, twitter, bio, website } = req.body;
+  const { name, company_name, youtube, twitter, bio, website, age, height, wins, losses, fighter_class, kto_percentage, submission_percentage, country } = req.body;
   const profile = req.files;
-
+console.log(req.body);
   let profileUrl;
   // const profile_picture = `${req.protocol}://${req.get(
   //   "host"
   // )}/profilePictures/${req.file.filename}`;
+
+  try{
+
+    // Convert empty strings to NULL for numeric fields
+const ageValue = age ? parseInt(age) : null;
+const heightValue = height ? height : null; // Keep as VARCHAR
+const winsValue = wins ? parseInt(wins) : null;
+const lossesValue = losses ? parseInt(losses) : null;
+const ktoPercentageValue = kto_percentage ? parseFloat(kto_percentage) : null;
+const submissionPercentageValue = submission_percentage ? parseFloat(submission_percentage) : null;
+const fighterClassValue = fighter_class ? fighter_class : null; // Convert empty string to NULL
+const countryValue = country ? country : null; // Keep as VARCHAR
+  
 
   if (profile.profile_picture) {
     profileUrl = await uploadFile(profile.profile_picture);
@@ -143,13 +164,23 @@ exports.updateProfile = asyncChoke(async (req, res, next) => {
     } else if (twitter) {
       social_media = twitter;
     }
-    const profilequery = `update profiles set bio=? ,social_media_links=?,company_name=?,website=?
+    const profilequery = `update profiles set bio=? ,social_media_links=?,company_name=?,website=?,
+     age=?,height=?,wins=?,losses=?,fighter_class=?,kto_percentage=?,submission_percentage=?,country=?
+
       where user_id=?`;
     await pool.query(profilequery, [
       bio,
       social_media,
       company_name,
       website,
+      ageValue,
+      heightValue,
+      winsValue,
+      lossesValue,
+      fighterClassValue,
+      ktoPercentageValue,
+      submissionPercentageValue,
+      countryValue,
       id,
     ]);
   }
@@ -157,6 +188,11 @@ exports.updateProfile = asyncChoke(async (req, res, next) => {
   res.status(200).json({
     status: "Success",
   });
+
+  } catch (error) {
+    console.log(error);
+    return next(new AppError(400, "Failed to update profile"));
+  }
 });
 
 // exports.updateVedioCpmpletion = asyncChoke(async (req, res, next) => {

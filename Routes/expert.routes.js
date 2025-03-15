@@ -11,6 +11,8 @@ const {
   getPastCompetitions,
   addUpcomingCompetition,
   getUpcomingCompetitions,
+  addFigherHistory,
+  updateFighterHistory,
 } = require("../Controllers/expertController");
 
 const expertRouter = require("express").Router();
@@ -23,6 +25,8 @@ expertRouter.route("/expertGraphs").get(expertGraphs);
 expertRouter.route("/withdrawalHistory").get(getWithdrawalHistory);
 expertRouter.route("/reviewRequest").post(createReviewRequest);
 expertRouter.route("/getRemarks/:course_id").get(getRemarks);
+expertRouter.route("/addFighterHistory").post(addFigherHistory);
+expertRouter.route("/updateFighterHistory/:id").patch(updateFighterHistory);
 expertRouter.route("/addPastMatch").post(addPastCompetition);
 expertRouter.route("/addUpcomingMatch").post(addUpcomingCompetition);
 

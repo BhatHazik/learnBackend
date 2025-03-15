@@ -2,7 +2,54 @@ const { pool } = require("../Config/database");
 const { asyncChoke } = require("../Utils/asyncWrapper");
 const AppError = require("../Utils/error");
 const { getExpertsAllCourses } = require("./coursesController");
-const { create, findOne, findAndUpdate } = require("./handlerFactory");
+const { create, findOne, findAndUpdate, findAndDelete } = require("./handlerFactory");
+
+
+
+
+exports.addFigherHistory = asyncChoke(async (req, res, next) => {
+  console.log(req.body);
+  const {result, fighter_name, event_name, event_date, method, rounds, time, video_link, submission, ko} = req.body;
+  if(!result || !fighter_name || !event_name || !event_date || !method || !rounds || !time || !video_link) {
+    return next(new AppError(401, "provide all inputs"));
+  }
+  const date = new Date(event_date);
+  await create("fighter_history", {result, fighter_name, event_name, date:date, method_referee:method, rounds, time, fight_video_link:video_link, submission, ko, expert_id: req.user.id});
+  res.status(200).json({
+    status: "success",
+    message: "Fighter history added successfully",
+  });
+});
+
+exports.updateFighterHistory = asyncChoke(async (req, res, next) => {
+  const { id } = req.params;
+  const {result, fighter_name, event_name, event_date, method, rounds, time, video_link, submission, ko} = req.body;
+  const date = new Date(event_date);
+  await findAndUpdate("fighter_history", {result, fighter_name, event_name, date:date, method_referee:method, rounds, time, fight_video_link:video_link, submission, ko}, { expert_id: id });
+  res.status(200).json({
+    status: "success",
+    message: "Fighter history updated successfully",
+  });
+});
+
+exports.deleteFighterHistory = asyncChoke(async (req, res, next) => {
+  const { id } = req.params;
+  await findAndDelete("fighter_history", { id });
+  res.status(200).json({
+    status: "success",
+    message: "Fighter history deleted successfully",
+  });
+});
+
+exports.getFighterHistory = asyncChoke(async (req, res, next) => {
+  const { id } = req.query;
+  const query = `select * from fighter_history where expert_id=?`;
+  const [result] = await pool.query(query, [id]);
+  res.status(200).json({
+    status: "success",
+    data: result,
+  });
+});
 
 
 
@@ -592,6 +639,14 @@ exports.getProfile = asyncChoke(async (req, res, next) => {
   profiles.bio,
   profiles.company_name, 
   profiles.website,
+  profiles.age,
+  profiles.height,
+  profiles.wins,
+  profiles.losses,
+  profiles.fighter_class,
+  profiles.kto_percentage,
+  profiles.submission_percentage,
+  profiles.country,
   SUBSTRING_INDEX(profiles.social_media_links, ',', 1) AS youtube,
   SUBSTRING_INDEX(SUBSTRING_INDEX(profiles.social_media_links, ',', -1), ',', 1) AS twitter,
   -- Subquery to count total reviews

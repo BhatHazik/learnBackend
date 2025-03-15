@@ -194,7 +194,7 @@ module.exports = class Email {
     </div>
     <div class="email-footer">
         <p>Best regards,<br>The JiuJitsux Team</p>
-        <p><a href="http://www.jiuJitsux.com">www.jiuJitsux.com</a><br><a href="mailto:help@jiuJitsux.com">help@jiuJitsux.com</a></p>
+        <p><a href="http://www.myjiujitsu.com">www.myjiujitsu.com</a><br><a href="mailto:help@jiuJitsux.com">help@jiuJitsux.com</a></p>
     </div>
 </div>
 </body>

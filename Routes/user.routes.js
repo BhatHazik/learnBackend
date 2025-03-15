@@ -2,7 +2,7 @@ const {
   protect,
   successGoogleLogin,
 } = require("../Controllers/authController");
-const { getPastCompetitions, getUpcomingCompetitions } = require("../Controllers/expertController");
+const { getPastCompetitions, getUpcomingCompetitions, getFighterHistory } = require("../Controllers/expertController");
 const upload = require("multer")();
 
 const {
@@ -39,7 +39,7 @@ UserRouter.route("/profileCompletion").get(profileCompletion);
 UserRouter.route("/myLearning").get(myLearning);
 UserRouter.route("/getPastMatch").get(getPastCompetitions);
 UserRouter.route("/getUpcomingMatch").get(getUpcomingCompetitions);
-
+UserRouter.route("/getFighterHistory").get(getFighterHistory);
 UserRouter.route("/orderHistory").get(getOrderHistory);
 UserRouter.route("/certificates/:courseId").get(getCertificate);
 UserRouter.route("/purchasePoints")
