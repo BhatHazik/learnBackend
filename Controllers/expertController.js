@@ -775,3 +775,25 @@ WHERE users.id = ?;
     },
   });
 });
+
+
+exports.getSeminarBookings = asyncChoke(async (req, res, next) => {
+  const { id } = req.user;
+  const query = `
+    SELECT 
+      sb.*,
+      u.name as user_name,
+      u.profile_picture as user_profile_picture
+    FROM seminar_booking sb
+    JOIN users u ON sb.user_id = u.id 
+    WHERE sb.expert_id = ?`;
+  const [bookings] = await pool.query(query, [id]);
+  res.status(200).json({
+    status: "success", 
+    data: bookings,
+  });
+});
+
+
+
+

@@ -18,6 +18,7 @@ const {
   deletePastCompetition,
   updateUpcomingCompetition,
   deleteUpcomingCompetition,
+  getSeminarBookings,
 } = require("../Controllers/expertController");
 
 const expertRouter = require("express").Router();
@@ -39,5 +40,7 @@ expertRouter.route("/deletePastMatch/:id").delete(deletePastCompetition);
 expertRouter.route("/addUpcomingMatch").post(addUpcomingCompetition);
 expertRouter.route("/updateUpcomingMatch/:id").patch(updateUpcomingCompetition);
 expertRouter.route("/deleteUpcomingMatch/:id").delete(deleteUpcomingCompetition);
+expertRouter.route("/getSeminarBookings").get(getSeminarBookings);
+
 
 module.exports = expertRouter;

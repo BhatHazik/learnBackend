@@ -399,7 +399,7 @@ exports.createPyoutRequest = asyncChoke(async (req, res, next) => {
   const { amount } = req.body;
 
   if (amount < 50)
-    return next(new AppError(400, "you need to enter amount more than 50"));
+    return next(new AppError(400, "You need to enter an amount greater than $50."));
 
   const [email] = await pool.query(`SELECT email FROM users WHERE id=?`, [id]);
 
@@ -409,58 +409,54 @@ exports.createPyoutRequest = asyncChoke(async (req, res, next) => {
       limit: 1,
     });
 
-    let customerId;
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
-    } else {
-      return next(new AppError(401, "please add the account details first"));
+    if (customers.data.length === 0) {
+      return next(new AppError(401, "Please add your bank account details first."));
     }
 
-    const bankAccounts = await stripe.customers.listSources(customerId, {
+    const bankAccounts = await stripe.customers.listSources(customers.data[0].id, {
       object: "bank_account",
     });
 
     if (bankAccounts.data.length === 0) {
-      return next(new AppError(401, "please add the account details first"));
+      return next(new AppError(401, "Please add your bank account details first."));
     }
 
-    const payments = ` SELECT
-   COALESCE(FLOOR(SUM(amount - ((amount * commission_rate) / 100))), 0) AS total_amount
-FROM payments 
-JOIN courses ON payments.course_id = courses.id 
-WHERE courses.expert_id = ?;
-`;
+    const payments = `
+      SELECT COALESCE(FLOOR(SUM(amount - ((amount * commission_rate) / 100))), 0) AS total_amount
+      FROM payments 
+      JOIN courses ON payments.course_id = courses.id 
+      WHERE courses.expert_id = ?;
+    `;
     const [orders] = await pool.query(payments, [req.user.id]);
 
-    const query = `SELECT 
-        SUM(withdrawal_amount) AS total_withdrawn_amount
-     FROM 
-        withdrawal
-     WHERE 
-        expert_id = ?
+    const withdrawalQuery = `
+      SELECT SUM(withdrawal_amount) AS total_withdrawn_amount
+      FROM withdrawal
+      WHERE expert_id = ?;
     `;
+    const [withdrawal] = await pool.query(withdrawalQuery, [req.user.id]);
 
-    const [withdrawal] = await pool.query(query, [req.user.id]);
+    const totalEarnings = orders[0].total_amount || 0;
+    const totalWithdrawn = withdrawal[0].total_withdrawn_amount || 0;
+    const payableAmount = Math.floor(totalEarnings - totalWithdrawn - 50);
 
-    const payableAmount = Math.floor(
-      orders[0].total_amount - withdrawal[0].total_withdrawn_amount - 50
-    );
-
-    if (amount > payableAmount)
+    if (amount > payableAmount) {
       return next(
-        new AppError(400, "you dont have this much amount in yout wallet")
+        new AppError(400, `You can withdraw up to $${payableAmount}. You must keep $50 in your wallet after withdrawal.`)
       );
+    }
 
     await create("payout_requests", { expert_id: id, amount, is_paid: false });
 
     res.status(200).json({
       status: "Success",
-      message: "request sent successfully",
+      message: "Request sent successfully.",
     });
   } catch (err) {
     return next(new AppError(500, `Payout failed: ${err.message}`));
   }
 });
+
 
 exports.createPayout = asyncChoke(async (req, res, next) => {
   const { id } = req.params;
