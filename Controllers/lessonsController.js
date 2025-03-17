@@ -401,52 +401,54 @@ exports.markLessonAsRead = asyncChoke(async (req, res, next) => {
   const { id } = req.user;
   const { course_id, lesson_id } = req.body;
 
-  const query = `select * from user_progress where user_id=? and course_id=? and lesson_id=?`;
+  // Check if the lesson is already marked as completed
+  const query = `SELECT * FROM user_progress WHERE user_id=? AND course_id=? AND lesson_id=?`;
   const [readLesson] = await pool.query(query, [id, course_id, lesson_id]);
 
+  // If the lesson is not in user_progress, add it as completed
   if (readLesson.length === 0) {
-    const progress = await create("user_progress", {
+    await create("user_progress", {
       user_id: id,
       course_id,
       lesson_id,
       completed: true,
     });
-  } else if (readLesson[0].completed === 0) {
-    const update = `update user_progress set completed=true where user_id=? and course_id=? and lesson_id=?`;
-    await pool.query(update, [id, course_id, lesson_id]);
-  } else if (readLesson[0].completed === 1) {
-    const update = `update user_progress set completed=false where user_id=? and course_id=? and lesson_id=?`;
+  } 
+  // If the lesson is in user_progress but not completed, mark it as completed
+  else if (readLesson[0].completed === 0) {
+    const update = `UPDATE user_progress SET completed=true WHERE user_id=? AND course_id=? AND lesson_id=?`;
     await pool.query(update, [id, course_id, lesson_id]);
   }
 
-  const completionQuery = `select completion_percentage from users_courses where user_id=? and course_id=? `;
+  // Update completion percentage
+  const completionQuery = `SELECT completion_percentage FROM users_courses WHERE user_id=? AND course_id=?`;
   const [completion] = await pool.query(completionQuery, [id, course_id]);
 
   if (completion[0].completion_percentage < 100) {
     const query2 = `UPDATE users_courses uc
     JOIN (
-    SELECT
-        (COUNT(CASE WHEN up.completed = true THEN 1 ELSE NULL END)) AS watched_lessons,
+      SELECT
+        COUNT(CASE WHEN up.completed = true THEN 1 ELSE NULL END) AS watched_lessons,
         (
-            SELECT COUNT(l.id)
-            FROM lessons l
-            JOIN chapters c ON l.chapter_id = c.id
-            WHERE c.course_id = ?
+          SELECT COUNT(l.id)
+          FROM lessons l
+          JOIN chapters c ON l.chapter_id = c.id
+          WHERE c.course_id = ?
         ) AS total_lessons
-    FROM
-        user_progress up
-    WHERE
-        up.user_id = ? AND up.course_id = ?
-  ) AS lesson_data
-  ON uc.user_id = ? AND uc.course_id = ?
-  SET
-    uc.completion_percentage = (lesson_data.watched_lessons * 100.0 / lesson_data.total_lessons),
-    uc.updated_at = NOW();
-  `;
+      FROM user_progress up
+      WHERE up.user_id = ? AND up.course_id = ?
+    ) AS lesson_data
+    ON uc.user_id = ? AND uc.course_id = ?
+    SET uc.completion_percentage = (lesson_data.watched_lessons * 100.0 / lesson_data.total_lessons),
+    uc.updated_at = NOW();`;
+
     await pool.query(query2, [course_id, id, course_id, id, course_id]);
-  } else if ((completion[0].completion_percentage = 100)) {
-    const certificate = `select * from certificates where user_id=? and course_id=?`;
-    const [userCertificate] = await pool.query(certificate, [id, course_id]);
+  } 
+
+  // Check for certificate
+  if (completion[0].completion_percentage === 100) {
+    const certificateQuery = `SELECT * FROM certificates WHERE user_id=? AND course_id=?`;
+    const [userCertificate] = await pool.query(certificateQuery, [id, course_id]);
 
     if (userCertificate.length === 0) {
       const certificate_id = generateUniqueString();
@@ -456,5 +458,6 @@ exports.markLessonAsRead = asyncChoke(async (req, res, next) => {
 
   res.status(200).json({
     status: "Success",
+    message: "Lesson marked as completed",
   });
 });

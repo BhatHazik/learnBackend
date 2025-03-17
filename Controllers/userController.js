@@ -415,6 +415,7 @@ WHERE
 exports.getCertificate = asyncChoke(async (req, res, next) => {
   const { id } = req.user;
   const { courseId } = req.params;
+  // console.log(id, courseId);
   const query = `SELECT 
     courses.title, 
     users.name AS user, 
