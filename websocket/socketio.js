@@ -11,6 +11,7 @@ function initWebSocket(server) {
   io = socketIo(server, {
     cors: {
       origin: [
+        "http://192.168.100.39:5173",
         "http://192.168.1.4:5173",
         "http://localhost:5173",
         "https://myjiujitsu.com",

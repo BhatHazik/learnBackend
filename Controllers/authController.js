@@ -180,7 +180,9 @@ exports.login = asyncChoke(async (req, res, next) => {
 });
 
 exports.protect = asyncChoke(async (req, res, next) => {
+  // console.log("protect");
   let token;
+  // console.log(req.headers.authorization);
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
@@ -189,7 +191,7 @@ exports.protect = asyncChoke(async (req, res, next) => {
   else if (req.cookies.JWT) token = req.cookies.JWT;
 
   const cookies = token;
-
+  // console.log(token);
   if (!cookies) return next(new AppError(400, "Not logged in."));
 
   const { email } = jwt.verify(cookies, process.env.JWT_SECRET);
@@ -516,10 +518,17 @@ exports.changeEmail = asyncChoke(async (req, res, next) => {
   if (!(await comparePassword(password, user[0].password)))
     return next(new AppError(401, "Invalid password"));
 
+  // Check if another account exists with the given email
+  const emailCheckQuery = `select id from users where email=?`;
+  const [existingEmail] = await pool.query(emailCheckQuery, [email]);
+
+  if (existingEmail.length > 0) {
+    return next(new AppError(409, "Email is already in use by another account"));
+  }
+
   const query2 = `update users set email=? , email_verified=0 where id=?`;
   await pool.query(query2, [email, id]);
 
-  // const token = genVerifyLink(email);
   const token = jwt.sign({ data: { email, id } }, process.env.JWT_SECRET, {
     expiresIn: "59m",
   });
@@ -531,7 +540,6 @@ exports.changeEmail = asyncChoke(async (req, res, next) => {
     httpOnly: true,
     sameSite: "none",
     secure: req.secure || req.headers["x-forwarded-proto"] === "https",
-    // secure: true,
   };
 
   res.cookie("JWT", "Your session is about to expire!", cookieOptions);
@@ -566,6 +574,7 @@ exports.EmailUpdateVerification = asyncChoke(async (req, res, next) => {
 exports.deleteAccount = asyncChoke(async (req, res, next) => {
   const { id } = req.user;
   const { password } = req.body;
+  // console.log(password);
 
   const query = `select password,name from users where id=?`;
   const [user] = await pool.query(query, [id]);
@@ -577,8 +586,8 @@ exports.deleteAccount = asyncChoke(async (req, res, next) => {
   if (!(await comparePassword(password, user[0].password)))
     return next(new AppError(401, "Invalid password"));
 
-  const deleted = `delete from users where id=?`;
-  await pool.query(deleted, [id]);
+  const deleted = `update users set status=? where id=?`;
+  await pool.query(deleted, [false, id]);
 
   res.status(200).json({
     status: "Success",

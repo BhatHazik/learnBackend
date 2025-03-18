@@ -58,6 +58,6 @@ AuthRouter.use(protect);
 AuthRouter.post("/logout", logout);
 AuthRouter.route("/updatePassword").patch(updatePassword);
 AuthRouter.route("/email/updateEmail").patch(changeEmail);
-AuthRouter.delete("/deleteAccount", deleteAccount);
+AuthRouter.patch("/deleteAccount", deleteAccount);
 
 module.exports = AuthRouter;
