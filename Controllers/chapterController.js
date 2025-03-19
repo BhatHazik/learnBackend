@@ -25,16 +25,24 @@ exports.createChapter = asyncChoke(async (req, res, next) => {
 
 exports.getChaptersOfCourse = asyncChoke(async (req, res, next) => {
   const { course_id } = req.params;
-  const [chapters] = await findMany("chapters", { course_id });
+
+  // Fetch chapters ordered by sequence
+  const [chapters] = await pool.query(
+    "SELECT * FROM chapters WHERE course_id = ? ORDER BY sequence",
+    [course_id]
+  );
 
   if (chapters.length === 0) {
     return next(new AppError(404, "No chapters found"));
   }
 
-  // Fetch lessons for each chapter
+  // Fetch lessons for each chapter in order
   const chaptersWithLessons = await Promise.all(
     chapters.map(async (chapter) => {
-      const [lessons] = await findMany("lessons", { chapter_id: chapter.id });
+      const [lessons] = await pool.query(
+        "SELECT * FROM lessons WHERE chapter_id = ? ORDER BY sequence",
+        [chapter.id]
+      );
       return { ...chapter, lessons };
     })
   );
@@ -44,6 +52,7 @@ exports.getChaptersOfCourse = asyncChoke(async (req, res, next) => {
     data: chaptersWithLessons,
   });
 });
+
 
 exports.updateChapter = asyncChoke(async (req, res, next) => {
   const { id } = req.params;

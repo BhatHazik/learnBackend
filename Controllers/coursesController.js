@@ -28,8 +28,8 @@ const getCourseContent = asyncChoke(async (user, id, expert) => {
   SELECT chapters.title AS chapterTitle, 
          lessons.title AS lessonTitle, 
          duration,
-         video_url, 
-         video_type,
+         lessons.video_url, 
+         lessons.video_type,
          chapter_id,
          lessons.thumbnail,
          lessons.id AS lesson_id,
@@ -89,9 +89,9 @@ ORDER BY
     }
 
     let finalVideoUrl = video_url;
-    if (video_type === "local") {
-      finalVideoUrl = `https://elearn-pv2m.onrender.com/api/v1/courses/stream-video/${lesson_id}`;
-    }
+    // if (video_type === "local") {
+    //   finalVideoUrl = `https://elearn-pv2m.onrender.com/api/v1/courses/stream-video/${lesson_id}`;
+    // }
 
     chapter.lessons.push({
       lesson_id,
@@ -123,9 +123,9 @@ const getCourseContentWithotPurchase = asyncChoke(async (id, expert) => {
   SELECT chapters.title AS chapterTitle, 
          lessons.title AS lessonTitle, 
          duration,
-         video_type,
+         lessons.video_type,
          CASE 
-      WHEN chapters.sequence = 1 THEN video_url 
+      WHEN chapters.sequence = 1 THEN lessons.video_url 
       ELSE NULL 
     END AS video_url,
      CASE 
@@ -180,7 +180,7 @@ JOIN
       if (video_type === "youtube" || video_type === "vimeo") {
         finalVideoUrl = video_url;
       } else {
-        finalVideoUrl = `https://elearn-pv2m.onrender.com/api/v1/courses/stream-video/${lesson_id}`;
+        finalVideoUrl = video_url;
       }
     }
 

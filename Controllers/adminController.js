@@ -393,48 +393,44 @@ exports.expertsForAdmin = asyncChoke(async (req, res, next) => {
   const limit = parseInt(req.query.limit, 10) || 5;
   const offset = (page - 1) * limit;
 
-  const query = `SELECT
+  const query = `
+SELECT
     users.id,
     users.name,
     users.profile_picture,
     users.created_at,
     users.status,
     COALESCE(
-        (SELECT COUNT(c.id)
-         FROM courses c
-         WHERE c.expert_id = users.id), 0
+        (SELECT COUNT(c.id) FROM courses c WHERE c.expert_id = users.id), 0
     ) AS total_courses,
-    COALESCE(ROUND(SUM(payments.amount - ((payments.amount * payments.commission_rate) / 100)), 2), 0) AS payable_amount,
-    COALESCE(SUM(withdrawal.withdrawal_amount), 0) AS total_withdrawn_amount
-FROM
-    users
-LEFT JOIN
-    payments ON payments.course_id IN (SELECT id FROM courses WHERE expert_id = users.id)
-LEFT JOIN
-    withdrawal ON withdrawal.expert_id = users.id
-WHERE
-    users.user_type = 'expert' and users.status=1
-GROUP BY
-    users.id
- LIMIT ? OFFSET ?;
-  `;
+    COALESCE(
+        (SELECT ROUND(SUM(p.amount - ((p.amount * p.commission_rate) / 100)), 2)
+         FROM payments p
+         JOIN courses c ON p.course_id = c.id
+         WHERE c.expert_id = users.id), 0
+    ) AS total_earnings,
+    COALESCE(
+        (SELECT SUM(w.withdrawal_amount) FROM withdrawal w WHERE w.expert_id = users.id), 0
+    ) AS total_withdrawn_amount
+FROM users
+WHERE users.user_type = 'expert' AND users.status = 1
+LIMIT ? OFFSET ?;
+`;
 
-  const [experts] = await pool.query(query, [limit, offset]);
-  if (experts.length === 0) return next(new AppError(404, "no experts found"));
+const [experts] = await pool.query(query, [limit, offset]);
 
-  experts.forEach((expert) => {
-    expert.payable_amount = Math.floor(
-      expert.payable_amount - expert.total_withdrawn_amount
-    );
-    delete expert.total_withdrawn_amount;
-  });
+if (experts.length === 0) return next(new AppError(404, "no experts found"));
 
-  res.status(200).json({
-    status: "Success",
-    data: {
-      experts,
-    },
-  });
+experts.forEach((expert) => {
+  expert.payable_amount = Math.floor(expert.total_earnings - expert.total_withdrawn_amount);
+  delete expert.total_withdrawn_amount;
+});
+
+res.status(200).json({
+  status: "Success",
+  data: { experts },
+});
+
 });
 
 // add expert
